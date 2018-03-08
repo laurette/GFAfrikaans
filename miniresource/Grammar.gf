@@ -32,6 +32,7 @@ abstract Grammar = {
     V ;     -- verb (one-place, intransitive)
     V2 ;    -- two-place verb (two-place, transitive or prepositional)
     VS ;
+    VV ;
 
     Adv ;
   --   AdA ;   -- ad-adjective
@@ -63,7 +64,7 @@ abstract Grammar = {
 --    CompAdv : Adv -> VP ;         -- be here
     ComplVS : VS -> S  -> VP ;  -- know that she walks
 --     ComplVQ : VQ -> QS -> VP ;  -- wonder who walks
---     ComplVV : VV -> VP -> VP ;  -- want to walk
+    ComplVV : VV -> VP -> VP ;  -- want to walk
     AdvVP : VP -> Adv -> VP ; -- walk in the city
 
     DetCN   : Det -> CN -> NP ;
@@ -86,6 +87,9 @@ abstract Grammar = {
     a_Det, theSg_Det, thePl_Det, every_Det : Det ;
     this_Det, these_Det : Det ;
     that_Det, those_Det : Det ;
+    noSg_Det : Det ;
+    noPl_Det : Det ;
+
     i_NP, youSg_NP : NP ;
     no_one_NP : NP ;
   --   i_NP, youSg_NP, he_NP, she_NP, we_NP, youPl_NP, they_NP : NP ;
@@ -95,6 +99,7 @@ abstract Grammar = {
   --   here_Adv : Adv ;
   --   by_Prep, in_Prep, of_Prep, with_Prep : Prep ;
   --   can_VV, must_VV, want_VV : VV ;
+    can_VV, must_VV, want_VV : VV ;
   --   although_Subj, because_Subj, when_Subj : Subj ;
   --   when_IAdv, where_IAdv, why_IAdv : IAdv ;
 

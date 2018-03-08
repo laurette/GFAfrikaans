@@ -41,7 +41,23 @@ resource ResAfr = open Prelude in {
             VPerf => vperf
           } ;
           p = [] ;
-          hasPart = False
+          hasPart = False ;
+          isAux = False
+      } ;
+
+      mkAux : Str -> Str -> Verb =
+      \vpres,vpast ->
+      {
+          s = table {
+            VInfa => vpres ;
+            VInfb => vpast ;
+            VPres => vpres ;
+            VPast => vpast ;
+            VPerf => vpast
+          } ;
+          p = [] ;
+          hasPart = False ;
+          isAux = True
       } ;
 
       mkVerbPart : Str -> Str -> Str -> Str -> Str -> Str -> Verb =
@@ -55,7 +71,8 @@ resource ResAfr = open Prelude in {
             VPerf => vperf
           } ;
           p = part ;
-          hasPart = True
+          hasPart = True ;
+          isAux = False
       } ;
 
       regVerb : Str -> Verb = \hou ->
@@ -68,7 +85,8 @@ resource ResAfr = open Prelude in {
            VPerf => "ge"+hou
          } ;
          p = [] ;
-         hasPart = False
+         hasPart = False ;
+         isAux = False
        } ;
 
        regVerbPart : Str -> Str -> Verb = \hou,op ->
@@ -81,7 +99,8 @@ resource ResAfr = open Prelude in {
             VPerf => op+"ge"+hou
           } ;
           p = op ;
-          hasPart = True
+          hasPart = True ;
+          isAux = False
         } ;
 
       -- mkVerb2 : Verb -> Str -> Verb = \v,c ->
@@ -172,8 +191,9 @@ resource ResAfr = open Prelude in {
       Verb : Type = {
           s : VForm => Str ;
           p : Str ; -- "op" van "ophou"
-          hasPart : Bool -- is 'n deeltjiewerkwoord
-        } ;
+          hasPart : Bool ; -- is 'n deeltjiewerkwoord
+          isAux : Bool
+      } ;
 
     -- in building a clause, the final nie is always inserted for negative polarity, the initial nie depends on other factors
       VP : Type = {
@@ -187,14 +207,18 @@ resource ResAfr = open Prelude in {
           --adV : Str ; -- altyd/nooit
           filled : Bool ; -- insert first "nie" if sentence polarity is negative, because certain slots are filled (hy loop nie/hy loop *nie* goed nie)
           nword : Bool ; -- the vp contains the equivalent of an nword, which forces the second "nie"
-          finNie : Bool  -- final "nie" present irrespective of clause polarity; overrides any need for a final "nie"
+          finNie : Bool ; -- final "nie" present irrespective of clause polarity; overrides any need for a final "nie"
           --double2 : Bool ;  -- always insert second "nie", because of n-word (niemand *nie*), unless a final "nie" is already present...
           --objNeg : Bool ;   -- a final "nie" is present in an object NP
           --inf : Str * Bool ;
           --ppart : Str * Bool ;
           --ext : Str ;
           --subcl : Str * Bool * Bool -- <str, isPresent, finNie>
+          compV : VForm => Str
       } ;
+
+      addCompV : Verb -> (VForm => Str) -> (VForm => Str) = \v,compv ->
+        \\vf => v.s!vf ++ compv!vf ;
 
       pronNP : Str -> Str -> Number -> Person -> Gender -> TPol ->
                {s : Case => Str ; a : Agr ; isPron : Bool ; p : TPol } =

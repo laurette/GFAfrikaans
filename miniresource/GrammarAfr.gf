@@ -8,12 +8,13 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     VP = ResAfr.VP ;
     AP = { s : AForm => Str } ;
     CN = { s : Number => Str ; g : Gender } ;
-    Det = {s : Str ; n : Number } ;
+    Det = {s : Str ; n : Number ; p : TPol } ;
     N = { s : Number => Str ; g : Gender } ;
     A = { s : AForm => Str } ;
     V = Verb ;
     V2 = { v : Verb ; c : Str ; hasC : Bool } ; -- c is die "na" van "kyk na"
     VS = { v : Verb ; c : Str } ; -- c is die "dat" van "weet dat"
+    VV = Verb ;
     Adv = { s : Str ; p : TPol } ; -- polarity: altyd/nooit
     -- AdA = {s : Str} ;
     Pol = { s : Str ; p : TPol} ;
@@ -35,30 +36,38 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       s = \\t,p,f =>
         let
           subj = np.s ! Nom ;
-          verba = case t of {
-            TPres => (vp.v).s!VPres ; -- hou / sien
-            TPast => "het" ;
-            TPerf => "het" ;
-            TFut => "sal"
+          verba = case <t,vp.v.isAux> of {
+            <TPres,_> => (vp.v).s!VPres ; -- hou / sien / kan
+            <TPast,True> => (vp.v).s!VPast ; -- kon
+            <TPast,False> => "het" ;
+            <TPerf,True> => (vp.v).s!VPast ; -- kon
+            <TPerf,False> => "het" ;
+            <TFut,_> => "sal"
           } ;
-          verbb = case t of {
-            TPres => (vp.v).p ; -- op / []
-            TPast => (vp.v).s!VPast ; -- opgehou / gesien
-            TPerf => (vp.v).s!VPerf ; -- opgehou / gesien
-            TFut => (vp.v).s!VInfa -- ophou / sien
+          verbb = case <t,vp.v.isAux> of {
+            <TPres,True> => vp.compV ! VInfa ; -- (wil) ophou / sien
+            <TPast,True> => vp.compV ! VInfb ;  -- (wou) ophou / sien
+            <TPerf,True> => vp.compV ! VPerf ++ "het" ; -- opgehou het / gesien het
+            <TFut,True> => (vp.v).s ! VPres ++ vp.compV ! VInfa ; -- kan ophou / kan sien
+
+            <TPres,False> => (vp.v).p ; -- op / []
+            <TPast,False> => (vp.v).s!VPast ; -- opgehou / gesien
+            <TPerf,False> => (vp.v).s!VPerf ; -- opgehou / gesien
+            <TFut,False> => (vp.v).s!VInfa -- ophou / sien
           } ;
           --verbc =
           obja = vp.n2a ;
           objb = vp.n2b ;
           subcl = vp.subCl ;
           adv = vp.adv ;
-          neg1 : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
+          neg1a : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
+          neg1b : TPol => Str = table { TPos => [] ; TNeg => "nie" } ;
           neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos np.p vp.nword vp.finNie) ;
                                        TNeg => putNie (fillNeg2Neg vp.finNie) } ;
         in case f of {
-          SVO => subj ++ verba ++ obja ++ neg1!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;
-          SOV => subj ++ obja ++ neg1!p ++ adv ++ objb ++ verba ++ verbb ++ subcl ++ neg2!p ;
-          VSO => verba ++ subj ++ obja ++ neg1!p ++ adv ++ objb ++ subcl ++ verbb ++ neg2!p
+          SVO => subj ++ verba ++ obja ++ neg1a!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;
+          SOV => subj ++ obja ++ neg1b!p ++ adv ++ objb ++ verba ++ verbb ++ subcl ++ neg2!p ;
+          VSO => verba ++ subj ++ obja ++ neg1a!p ++ adv ++ objb ++ subcl ++ verbb ++ neg2!p
         } ;
       finNie = finNiePos np.p vp.nword vp.finNie
     } ;
@@ -74,7 +83,8 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
         TPos => vp.nword ;
         TNeg => True
       } ;
-      finNie = vp.finNie
+      finNie = vp.finNie ;
+      compV = vp.compV
     } ;
 
     ComplVS vs s = {
@@ -85,7 +95,20 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       adv = [] ;
       filled = True ;
       nword = False ;
-      finNie = s.finNie
+      finNie = s.finNie ;
+      compV = \\_ => []
+    } ;
+
+    ComplVV vv vp = {
+      v = vv ;
+      n2a = vp.n2a ;
+      n2b = vp.n2b ;
+      subCl = vp.subCl ;
+      adv = vp.adv ;
+      filled = True ;
+      nword = vp.nword ;
+      finNie = vp.finNie ;
+      compV = addCompV vp.v vp.compV
     } ;
 
     ComplV2 v2 np = {
@@ -108,7 +131,8 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
         TPos => False ;
         TNeg => True
       } ;
-      finNie = False
+      finNie = False ;
+      compV = \\_ => []
     } ;
 
     UseV v = {
@@ -119,14 +143,15 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       adv = [] ;
       filled = v.hasPart ; -- True => "hy hou [nie] *op* nie" ; False => "hy loop [] nie"
       nword = False ;
-      finNie = False
+      finNie = False ;
+      compV = \\_ => []
     } ;
 
     DetCN det cn = {
      s = \\_ => det.s ++ cn.s ! det.n ;
      a = Ag det.n Per3 cn.g ;
      isPron = False ;
-     p = TPos
+     p = det.p
      } ;
 
     ModCN ap cn = {
@@ -138,15 +163,18 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
     UseA adj = adj ;
 
-    a_Det = { s = "'n" ; n = Sg } ;
-    every_Det = { s = "elke" ; n = Sg } ;
-    theSg_Det = { s = "die" ; n = Sg } ;
-    thePl_Det = { s = "die" ; n = Pl } ;
+    a_Det = { s = "'n" ; n = Sg ; p = TPos } ;
+    every_Det = { s = "elke" ; n = Sg ; p = TPos } ;
+    theSg_Det = { s = "die" ; n = Sg ; p = TPos } ;
+    thePl_Det = { s = "die" ; n = Pl ; p = TPos } ;
 
-    this_Det = { s = "hierdie" ; n = Sg } ;
-    these_Det = { s = "hierdie" ; n = Pl } ;
-    that_Det = { s = "daardie" ; n = Sg } ;
-    those_Det = { s = "daardie" ; n = Pl } ;
+    this_Det = { s = "hierdie" ; n = Sg ; p = TPos } ;
+    these_Det = { s = "hierdie" ; n = Pl ; p = TPos } ;
+    that_Det = { s = "daardie" ; n = Sg ; p = TPos } ;
+    those_Det = { s = "daardie" ; n = Pl ; p = TPos } ;
+
+    noSg_Det = {s = "geen" ; n = Sg ; p = TNeg } ;
+    noPl_Det = {s = "geen" ; n = Pl ; p = TNeg } ;
 
     i_NP = pronNP "ek" "my" Sg Per1 Neuter TPos ;
     no_one_NP = pronNP "niemand" "niemand" Sg Per3 Neuter TNeg ;
@@ -158,7 +186,11 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     -- they_NP = pronNP "they" "them" Pl Per3 ;
     --
     -- very_AdA = ss "very" ;
-    --
+
+    can_VV = mkAux "kan" "kon" ;
+    must_VV = mkAux "moet" "moes" ;
+    want_VV = mkAux "wil" "wou" ;
+
     Pos  = {s = [] ; p = TPos} ;
     Neg  = {s = [] ; p = TNeg} ;
 
