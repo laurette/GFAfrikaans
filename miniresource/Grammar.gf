@@ -17,7 +17,6 @@ abstract Grammar = {
   --   Subj ;    -- subjunction                      e.g. "because"
   --   IAdv ;    -- interrogative adverb             e.g. "why"
 
-    Imp ;
     S ;     -- sentence
     QS ;
     QCl ;
@@ -38,20 +37,14 @@ abstract Grammar = {
   --   AdA ;   -- ad-adjective
     Tense ; -- tense
     Pol ;   -- polarity
-    Mood ;
   --   Conj ;  -- conjunction
   --
   fun
     UttS  : S -> Utt ;
     UttQS : QS -> Utt ;
 
-    UttImp : Imp -> Utt ;
-
-    UseCl  : Mood -> Tense -> Pol -> Cl -> S ;
+    UseCl  : Tense -> Pol -> Cl -> S ;
     UseQCl : Tense -> Pol -> QCl -> QS ;
-
-    SgImp : Pol -> VP -> Imp ;
-    PlImp : Pol -> VP -> Imp ;
 
     PredVP  : NP -> VP -> Cl ;
   --   SubjCl : Cl -> Subj -> S -> Cl ;     -- she walks because we run
@@ -107,12 +100,7 @@ abstract Grammar = {
 
      Pos, Neg : Pol ;
      Pres, Past, Fut, Perf : Tense ;
-     Indic, Pot, Subj, Consec : Mood ;
 
   --   and_Conj, or_Conj : Conj ;
-
-  -- aspectual adverbs
-     already_Adv : Adv ;
-     still_Adv : Adv ;
 
  }

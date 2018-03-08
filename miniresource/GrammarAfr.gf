@@ -18,14 +18,13 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     -- AdA = {s : Str} ;
     Pol = { s : Str ; p : TPol} ;
     Tense = { s : Str ; t : TTense} ;
-    Mood = { s : Str } ;
     -- Conj = {s : Str ; n : Number} ;
   lin
     UttS s = s.s ! SVO ;
 
-    UseCl m t p cl =
+    UseCl t p cl =
       {
-        s = \\o => m.s ++ t.s ++ p.s ++ cl.s!t.t!p.p!o ;
+        s = \\o => t.s ++ p.s ++ cl.s!t.t!p.p!o ;
         finNie = case p.p of {
           TPos => cl.finNie ;
           TNeg => True
@@ -167,9 +166,4 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     Perf = {s = [] ; t = TPerf} ;
     Past = {s = [] ; t = TPast} ;
     Fut  = {s = [] ; t = TFut} ;
-
-    Indic = { s = [] } ;
-
-    already_Adv = regAdv "reeds" TPos ;
-    still_Adv = regAdv "steeds" TPos ;
   }
