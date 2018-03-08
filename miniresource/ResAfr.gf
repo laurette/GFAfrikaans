@@ -171,8 +171,8 @@ resource ResAfr = open Prelude in {
 
       Verb : Type = {
           s : VForm => Str ;
-          p : Str ;
-          hasPart : Bool
+          p : Str ; -- "op" van "ophou"
+          hasPart : Bool -- is 'n deeltjiewerkwoord
         } ;
 
     -- in building a clause, the final nie is always inserted for negative polarity, the initial nie depends on other factors
@@ -187,7 +187,7 @@ resource ResAfr = open Prelude in {
           --adV : Str ; -- altyd/nooit
           filled : Bool ; -- insert first "nie" if sentence polarity is negative, because certain slots are filled (hy loop nie/hy loop *nie* goed nie)
           nword : Bool ; -- the vp contains the equivalent of an nword, which forces the second "nie"
-          finNie : Bool  -- final "nie" present ; overrides any need for a final "nie"
+          finNie : Bool  -- final "nie" present irrespective of clause polarity; overrides any need for a final "nie"
           --double2 : Bool ;  -- always insert second "nie", because of n-word (niemand *nie*), unless a final "nie" is already present...
           --objNeg : Bool ;   -- a final "nie" is present in an object NP
           --inf : Str * Bool ;

@@ -18,8 +18,8 @@ abstract Grammar = {
   --   IAdv ;    -- interrogative adverb             e.g. "why"
 
     S ;     -- sentence
-    QS ;
-    QCl ;
+    -- QS ;
+    -- QCl ;
     Cl ;    -- clause
     VP ;    -- verb phrase
     NP ;    -- noun phrase
@@ -41,15 +41,15 @@ abstract Grammar = {
   --
   fun
     UttS  : S -> Utt ;
-    UttQS : QS -> Utt ;
+    -- UttQS : QS -> Utt ;
 
     UseCl  : Tense -> Pol -> Cl -> S ;
-    UseQCl : Tense -> Pol -> QCl -> QS ;
+    -- UseQCl : Tense -> Pol -> QCl -> QS ;
 
     PredVP  : NP -> VP -> Cl ;
   --   SubjCl : Cl -> Subj -> S -> Cl ;     -- she walks because we run
 
-    QuestCl    : Cl -> QCl ;             -- does she walk
+  --  QuestCl    : Cl -> QCl ;             -- does she walk
   --   QuestVP    : IP -> VP -> QCl ;       -- who walks
   --   QuestSlash : IP -> ClSlash -> QCl ;  -- who does she walk with
   --   QuestIAdv  : IAdv -> Cl -> QCl ;     -- why does she walk

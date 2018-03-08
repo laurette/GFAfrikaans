@@ -12,9 +12,9 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     N = { s : Number => Str ; g : Gender } ;
     A = { s : AForm => Str } ;
     V = Verb ;
-    V2 = { v : Verb ; c : Str ; hasC : Bool } ;
-    VS = { v : Verb ; c : Str } ;
-    Adv = { s : Str ; p : TPol } ;
+    V2 = { v : Verb ; c : Str ; hasC : Bool } ; -- c is die "na" van "kyk na"
+    VS = { v : Verb ; c : Str } ; -- c is die "dat" van "weet dat"
+    Adv = { s : Str ; p : TPol } ; -- polarity: altyd/nooit
     -- AdA = {s : Str} ;
     Pol = { s : Str ; p : TPol} ;
     Tense = { s : Str ; t : TTense} ;
@@ -36,16 +36,16 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
         let
           subj = np.s ! Nom ;
           verba = case t of {
-            TPres => (vp.v).s!VPres ;
+            TPres => (vp.v).s!VPres ; -- hou / sien
             TPast => "het" ;
             TPerf => "het" ;
             TFut => "sal"
           } ;
           verbb = case t of {
-            TPres => (vp.v).p ;
-            TPast => (vp.v).s!VPast ;
-            TPerf => (vp.v).s!VPerf ;
-            TFut => (vp.v).s!VInfa
+            TPres => (vp.v).p ; -- op / []
+            TPast => (vp.v).s!VPast ; -- opgehou / gesien
+            TPerf => (vp.v).s!VPerf ; -- opgehou / gesien
+            TFut => (vp.v).s!VInfa -- ophou / sien
           } ;
           --verbc =
           obja = vp.n2a ;
@@ -78,10 +78,10 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     } ;
 
     ComplVS vs s = {
-      v = vs.v ;
+      v = vs.v ; -- weet
       n2a = [] ;
       n2b = [] ;
-      subCl = vs.c ++ s.s ! SOV ;
+      subCl = vs.c ++ s.s ! SOV ; -- dat <S>
       adv = [] ;
       filled = True ;
       nword = False ;
@@ -91,18 +91,18 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     ComplV2 v2 np = {
       v = v2.v ;
       n2a = case <np.isPron,v2.hasC> of {
-        <True,False> => v2.c ++ np.s ! Acc ;
+        <True,False> => np.s ! Acc ; -- hy sien [my] (nie) nie
         <_,_> => []
       } ;
       n2b = case <np.isPron,v2.hasC> of {
         <True,False> => [] ;
-        <_,_> => v2.c ++ np.s ! Acc
+        <_,_> => v2.c ++ np.s ! Acc -- alle ander gevalle: hy kyk nie altyd [na my] nie; hy sien nie [die vrou] nie
       } ;
       subCl = [] ;
       adv = [] ;
-      filled = case np.isPron of {
-        True => False ;
-        False => True
+      filled = case <np.isPron,v2.hasC> of {
+        <True,False> => False ;
+        <_,_> => True
       } ;
       nword = case np.p of {
         TPos => False ;
@@ -117,7 +117,7 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       n2b = [] ;
       subCl = [] ;
       adv = [] ;
-      filled = v.hasPart ;
+      filled = v.hasPart ; -- True => "hy hou [nie] *op* nie" ; False => "hy loop [] nie"
       nword = False ;
       finNie = False
     } ;
@@ -130,7 +130,7 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
      } ;
 
     ModCN ap cn = {
-     s = \\n => ap.s ! APredic ++ cn.s ! n ;
+     s = \\n => ap.s ! AAttrib ++ cn.s ! n ;
      g = cn.g
      } ;
 
@@ -149,7 +149,7 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     those_Det = { s = "daardie" ; n = Pl } ;
 
     i_NP = pronNP "ek" "my" Sg Per1 Neuter TPos ;
-    no_one_NP = pronNP "niemand" "niemand" Sg Per3 Masc TNeg ;
+    no_one_NP = pronNP "niemand" "niemand" Sg Per3 Neuter TNeg ;
     -- youSg_NP = pronNP "you" "you" Sg Per2 ;
     -- he_NP = pronNP "he" "him" Sg Per3 ;
     -- she_NP = pronNP "she" "her" Sg Per3 ;
