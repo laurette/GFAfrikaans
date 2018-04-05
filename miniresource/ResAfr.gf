@@ -173,6 +173,7 @@ resource ResAfr = open Prelude in {
             b + v@("a") + "g" => b + v + "e" ; --kan nog nie aan 'n voorbeeld dink nie
 
             b + v@("aa"|"ee"|"oo"|"uu") + "r" => s ; --duur, duur
+            b + v@("oo") + "t" => s ; --groot, groot
             b + v@("aa"|"ee"|"oo"|"uu") + c@#cons => b + shortVoc v c + "e" ; --gaaf, gawe
             b + v@("a"|"e"|"i"|"o"|"u" ) + "f" => b + v + "ww" + "e" ; --grof, growwe
             --b + v@("a"|"e"|"i"|"o"|"u" ) + c@? => b + v + c + c + "e" ; --stom, growwe

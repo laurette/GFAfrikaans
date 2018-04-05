@@ -4,38 +4,110 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     Utt = Str ;
     S  = { s : Order => Str ; finNie : Bool } ;
     Cl = { s : TTense => TPol => Order => Str ; finNie : Bool } ;
+
+    QS = { s : Str ; finNie : Bool } ;
+    QCl = { s : TTense => TPol => Str ; finNie : Bool } ;
+
     NP = { s : Case => Str ; a : Agr ; isPron : Bool ; p : TPol } ; -- gender and number in order to make reflexive verbs work (die vrou verbeel haar, die kinders verbeel hulle)
     VP = ResAfr.VP ;
     AP = { s : AForm => Str } ;
     CN = { s : Number => Str ; g : Gender } ;
+
     Det = {s : Str ; n : Number ; p : TPol } ;
     N = { s : Number => Str ; g : Gender } ;
     A = { s : AForm => Str } ;
+
     V = Verb ;
     V2 = { v : Verb ; c : Str ; hasC : Bool } ; -- c is die "na" van "kyk na"
     VS = { v : Verb ; c : Str } ; -- c is die "dat" van "weet dat"
     VV = Verb ;
+
     Adv = { s : Str ; p : TPol } ; -- polarity: altyd/nooit
     -- AdA = {s : Str} ;
+
+    IP = {s : Str } ;
+
+    Subj = { s = Str ; o : Order } ;
+
     Pol = { s : Str ; p : TPol} ;
     Tense = { s : Str ; t : TTense} ;
     -- Conj = {s : Str ; n : Number} ;
+
   lin
     UttS s = s.s ! SVO ;
+    UttQS qs = qs.s ;
 
-    UseCl t p cl =
-      {
-        s = \\o => t.s ++ p.s ++ cl.s!t.t!p.p!o ;
-        finNie = case p.p of {
-          TPos => cl.finNie ;
-          TNeg => True
-        }
-      } ;
+    UseCl t p cl = {
+      s = \\o => t.s ++ p.s ++ cl.s!t.t!p.p!o ;
+      finNie = case p.p of {
+        TPos => cl.finNie ;
+        TNeg => True
+      }
+    } ;
+
+    UseQCl t p cl = {
+      s = t.s ++ p.s ++ cl.s!t.t!p.p ;
+      finNie = case p.p of {
+        TPos => cl.finNie ;
+        TNeg => True
+      }
+    } ;
+
+    QuestCl cl = { s = \\t,p => cl.s ! t ! p ! VSO ; finNie = cl.finNie } ;
 
     PredVP np vp = {
       s = \\t,p,f =>
         let
           subj = np.s ! Nom ;
+          verba = case <t,vp.v.isAux> of {
+            <TPres,_> => (vp.v).s!VPres ; -- hou / sien / kan
+            <TPast,True> => (vp.v).s!VPast ; -- kon
+            <TPast,False> => [] ;
+            <TPerf,True> => (vp.v).s!VPast ; -- kon
+            <TPerf,False> => [] ;
+            <TFut,_> => "sal"
+          } ;
+          verbb = case <t,vp.v.isAux> of {
+            <TPres,True> => vp.compV ! VInfa ; -- (wil) ophou / sien
+            <TPast,True> => vp.compV ! VInfb ;  -- (wou) ophou / sien
+            <TPerf,True> => vp.compV ! VPerf ++ "het" ; -- opgehou het / gesien het
+            <TFut,True> => (vp.v).s ! VPres ++ vp.compV ! VInfa ; -- kan ophou / kan sien
+
+            <TPres,False> => (vp.v).p ; -- op / []
+            <TPast,False> => (vp.v).s!VPast ; -- opgehou / gesien
+            <TPerf,False> => (vp.v).s!VPerf ; -- opgehou / gesien
+            <TFut,False> => (vp.v).s!VInfa -- ophou / sien
+          } ;
+          verbc = case <t,vp.v.isAux> of {
+            <TPres,_> => [] ; -- hou / sien / kan
+            <TPast,True> => [] ; -- kon
+            <TPast,False> => "het" ;
+            <TPerf,True> => [] ; -- kon
+            <TPerf,False> => "het" ;
+            <TFut,_> => []
+          } ;
+          obja = vp.n2a ;
+          objb = vp.n2b ;
+          subcl = vp.subCl ;
+          adv = vp.adv ;
+          neg1a : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
+          neg1b : TPol => Str = table { TPos => [] ; TNeg => "nie" } ;
+          neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos np.p vp.nword vp.finNie) ;
+                                       TNeg => putNie (fillNeg2Neg vp.finNie) } ;
+        in case f of {
+          SVO => subj ++ verba ++ verbc ++ obja ++ neg1a!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;
+          SOV => subj ++ obja ++ neg1b!p ++ adv ++ objb ++ verba ++ verbb ++ verbc ++ subcl ++ neg2!p ;
+          VSO => verba ++ verbc ++ subj ++ obja ++ neg1a!p ++ adv ++ objb ++ subcl ++ verbb ++ neg2!p
+        } ;
+      finNie = finNiePos np.p vp.nword vp.finNie
+    } ;
+
+    SubjCl cl subj s =
+
+    QuestVP ip vp = {
+      s = \\t,p =>
+        let
+          subj = ip.s ;
           verba = case <t,vp.v.isAux> of {
             <TPres,_> => (vp.v).s!VPres ; -- hou / sien / kan
             <TPast,True> => (vp.v).s!VPast ; -- kon
@@ -62,14 +134,11 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
           adv = vp.adv ;
           neg1a : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
           neg1b : TPol => Str = table { TPos => [] ; TNeg => "nie" } ;
-          neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos np.p vp.nword vp.finNie) ;
+          neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos TPos vp.nword vp.finNie) ;
                                        TNeg => putNie (fillNeg2Neg vp.finNie) } ;
-        in case f of {
-          SVO => subj ++ verba ++ obja ++ neg1a!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;
-          SOV => subj ++ obja ++ neg1b!p ++ adv ++ objb ++ verba ++ verbb ++ subcl ++ neg2!p ;
-          VSO => verba ++ subj ++ obja ++ neg1a!p ++ adv ++ objb ++ subcl ++ verbb ++ neg2!p
-        } ;
-      finNie = finNiePos np.p vp.nword vp.finNie
+        in
+          subj ++ verba ++ obja ++ neg1a!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;
+      finNie = finNiePos TPos vp.nword vp.finNie
     } ;
 
     AdvVP vp adv = {
@@ -190,6 +259,10 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     can_VV = mkAux "kan" "kon" ;
     must_VV = mkAux "moet" "moes" ;
     want_VV = mkAux "wil" "wou" ;
+
+    who_IP = { s = "wie" } ;
+
+    although_Subj = { s = "alhoewel" ; o = SOV } ;
 
     Pos  = {s = [] ; p = TPos} ;
     Neg  = {s = [] ; p = TNeg} ;
