@@ -102,8 +102,6 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       finNie = finNiePos np.p vp.nword vp.finNie
     } ;
 
-    SubjCl cl subj s =
-
     QuestVP ip vp = {
       s = \\t,p =>
         let
