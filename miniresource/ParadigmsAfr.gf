@@ -32,7 +32,11 @@ oper
   } ;
 
   mkVS = overload {
-    mkVS : V -> Str -> VS = \weet,dat -> lin VS { v = weet ; c = dat } ;
+    mkVS : V -> VS = \weet -> lin VS { v = weet ; c = "dat" } ;
+  } ;
+
+  mkVQ = overload {
+    mkVQ : V -> VS = \wonder -> lin VS { v = wonder ; c = "of" } ;
   } ;
   --
   -- mkV2 = overload {

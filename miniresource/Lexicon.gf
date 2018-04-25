@@ -26,6 +26,8 @@ fun
   stomach_N : N ;
   head_N : N ;
 
+  binoculars_N : N ;
+
   big_A : A ;
   small_A : A ;
   green_A : A ;
@@ -42,8 +44,8 @@ fun
   see_V2 : V2 ;
   --believe_VS
   know_VS : VS ;
-  --wonder_VQ : VQ ;
-  --john_PN, mary_PN : PN ;
+  wonder_VQ : VQ ;
+  john_PN, mary_PN : PN ;
 
   quickly_Adv : Adv ;
   always_Adv : Adv ;

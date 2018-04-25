@@ -7,6 +7,8 @@ lin
   tree_N = mkN "boom" ;
   lion_N = mkN "leeu" ;
 
+  binoculars_N = mkN "verkyker" ;
+
   big_A = mkA "groot" ;
   small_A = mkA "klein" ;
   green_A = mkA "groen" ;
@@ -18,13 +20,13 @@ lin
   see_V2 = mkV2 "sien" ;
   -- please_V2 = mkV2 "please" ;
   -- believe_VS = mkV "believe" ;
-  know_VS = mkVS (mkV "weet") "dat" ;
-  -- wonder_VQ = mkV "wonder" ;
-  -- john_PN = mkPN "John" ;
-  -- mary_PN = mkPN "Mary" ;
+  know_VS = mkVS (mkV "weet") ;
+  wonder_VQ = mkVQ (mkV "wonder") ;
 
   always_Adv = mkAdv "altyd" TPos ;
   never_Adv = mkAdv "nooit" TNeg ;
 
+  john_PN = { s = "Jan" ; a = Ag Sg Per3 Masc } ;
+  mary_PN = { s = "Maria" ; a = Ag Sg Per3 Fem } ;
 
 }

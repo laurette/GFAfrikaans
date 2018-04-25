@@ -13,6 +13,7 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     AP = { s : AForm => Str } ;
     CN = { s : Number => Str ; g : Gender } ;
 
+    PN = { s : Str ; a : Agr } ;
     Det = {s : Str ; n : Number ; p : TPol } ;
     N = { s : Number => Str ; g : Gender } ;
     A = { s : AForm => Str } ;
@@ -20,22 +21,29 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     V = Verb ;
     V2 = { v : Verb ; c : Str ; hasC : Bool } ; -- c is die "na" van "kyk na"
     VS = { v : Verb ; c : Str } ; -- c is die "dat" van "weet dat"
+    VQ = { v : Verb ; c : Str } ; -- c is die "of" van "wonder of"
     VV = Verb ;
 
     Adv = { s : Str ; p : TPol } ; -- polarity: altyd/nooit
-    -- AdA = {s : Str} ;
+    AdA = { s : Str} ;
 
-    IP = {s : Str } ;
+    IP = { s : Str } ;
+    Prep = { s : Str } ;
 
-    Subj = { s = Str ; o : Order } ;
+    --Subj = { s = Str ; o : Order } ;
 
     Pol = { s : Str ; p : TPol} ;
     Tense = { s : Str ; t : TTense} ;
-    -- Conj = {s : Str ; n : Number} ;
+    Conj = { s : Str } ;
 
   lin
     UttS s = s.s ! SVO ;
     UttQS qs = qs.s ;
+
+    ConjS conj s1 s2 = {
+      s = \\o => s1.s!o ++ conj.s ++ s2.s!o ;
+      finNie = s2.finNie
+    } ;
 
     UseCl t p cl = {
       s = \\o => t.s ++ p.s ++ cl.s!t.t!p.p!o ;
@@ -166,6 +174,18 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       compV = \\_ => []
     } ;
 
+    ComplVQ vq qs = {
+      v = vq.v ; -- weet
+      n2a = [] ;
+      n2b = [] ;
+      subCl = vq.c ++ qs.s ; -- dat <S>
+      adv = [] ;
+      filled = True ;
+      nword = False ;
+      finNie = qs.finNie ;
+      compV = \\_ => []
+    } ;
+
     ComplVV vv vp = {
       v = vv ;
       n2a = vp.n2a ;
@@ -214,6 +234,42 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       compV = \\_ => []
     } ;
 
+    ConjNP conj np1 np2 = {
+      s = \\c => np1.s!c ++ conj.s ++ np2.s!c ;
+      a = case np1.a of {
+        Ag _ Per1 _ => Ag Pl Per1 Neuter ;
+        Ag _ Per2 _ => Ag Pl Per2 Neuter ;
+        Ag _ Per3 _ => case np2.a of {
+          Ag _ Per1 _ => Ag Pl Per1 Neuter ;
+          Ag _ Per2 _ => Ag Pl Per2 Neuter ;
+          Ag _ Per3 _ => Ag Pl Per3 Neuter
+        }
+      } ;
+      isPron = np1.isPron ;
+      p = case np1.p of {
+        TNeg => TNeg ;
+        TPos => np2.p
+      }
+    } ;
+
+    ConjAP conj ap1 ap2 = {
+      s = \\aform => ap1.s!aform ++ conj.s ++ ap2.s!aform
+    } ;
+
+    AdvNP np adv = {
+      s = \\c => np.s!c ++ adv.s ;
+      a = np.a ;
+      isPron = np.isPron ;
+      p = np.p
+    } ;
+
+    UsePN pn = {
+      s = \\_ => pn.s ;
+      a = pn.a ;
+      isPron = False ;
+      p = TPos
+    } ;
+
     DetCN det cn = {
      s = \\_ => det.s ++ cn.s ! det.n ;
      a = Ag det.n Per3 cn.g ;
@@ -227,6 +283,15 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
      } ;
 
     UseN n = n ;
+
+    PrepNP prep np = {
+      s = prep.s ++ np.s!Acc ;
+      p = np.p
+    } ;
+
+    AdAP ada ap = {
+      s = \\aform => ada.s ++ ap.s!aform
+    } ;
 
     UseA adj = adj ;
 
@@ -243,16 +308,18 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     noSg_Det = {s = "geen" ; n = Sg ; p = TNeg } ;
     noPl_Det = {s = "geen" ; n = Pl ; p = TNeg } ;
 
-    i_NP = pronNP "ek" "my" Sg Per1 Neuter TPos ;
     no_one_NP = pronNP "niemand" "niemand" Sg Per3 Neuter TNeg ;
-    -- youSg_NP = pronNP "you" "you" Sg Per2 ;
-    -- he_NP = pronNP "he" "him" Sg Per3 ;
-    -- she_NP = pronNP "she" "her" Sg Per3 ;
-    -- we_NP = pronNP "we" "us" Pl Per1 ;
-    -- youPl_NP = pronNP "you" "you" Pl Per2 ;
-    -- they_NP = pronNP "they" "them" Pl Per3 ;
-    --
-    -- very_AdA = ss "very" ;
+    nothing_NP = pronNP "niks" "niks" Sg Per3 Neuter TNeg ;
+
+    i_NP = pronNP "ek" "my" Sg Per1 Neuter TPos ;
+    youSg_NP = pronNP "jy" "jou" Sg Per2 Neuter TPos ;
+    he_NP = pronNP "hy" "hom" Sg Per3 Masc TPos ;
+    she_NP = pronNP "sy" "haar" Sg Per3 Fem TPos ;
+    we_NP = pronNP "ons" "ons" Sg Per1 Neuter TPos ;
+    youPl_NP = pronNP "julle" "julle" Sg Per2 Neuter TPos ;
+    they_NP = pronNP "hulle" "hulle" Sg Per3 Neuter TPos ;
+
+    very_AdA = ss "baie" ;
 
     can_VV = mkAux "kan" "kon" ;
     must_VV = mkAux "moet" "moes" ;
@@ -260,7 +327,16 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
     who_IP = { s = "wie" } ;
 
+    by_Prep = {s = "deur"}  ;
+    in_Prep = {s = "in"}  ;
+    of_Prep = {s = "van"}  ;
+    with_Prep = {s = "met"}  ;
+    to_Prep = {s = "na"} ;
+
     although_Subj = { s = "alhoewel" ; o = SOV } ;
+
+    and_Conj = { s = "en" } ;
+    or_Conj = { s = "of" } ;
 
     Pos  = {s = [] ; p = TPos} ;
     Neg  = {s = [] ; p = TNeg} ;
