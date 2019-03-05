@@ -240,14 +240,14 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       } ;
       subCl = [] ;
       adv = [] ;
-      -- filled = case <np.isPron,v2.hasC> of {
-      --   <True,False> => False ;
-      --   <_,_> => True
-      -- } ; ***2018-10-03
-      filled = case np.isPron of {
-        True => False ;
-        False => True
-      } ;
+      filled = case <np.isPron,v2.hasC> of {
+        <True,False> => False ;
+        <_,_> => True
+      } ; -- ***2018-10-03
+      -- filled = case np.isPron of {
+      --   True => False ;
+      --   False => True
+      -- } ;
       nword = case np.p of {
         TPos => False ;
         TNeg => True
