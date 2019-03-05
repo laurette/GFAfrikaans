@@ -1,4 +1,4 @@
-resource ResAfr = open Prelude in {
+resource ResAfr = open Prelude,Predef in {
 
   param
     Number = Sg | Pl ;
@@ -8,6 +8,8 @@ resource ResAfr = open Prelude in {
     TPol = TPos | TNeg ;
     Person = Per1 | Per2 | Per3 ;
     Gender = Masc | Fem | Neuter ;
+
+    VType = VReg | VAux | VBe ;
 
     AForm = APredic | AAttrib | AGen ;
 
@@ -42,7 +44,7 @@ resource ResAfr = open Prelude in {
           } ;
           p = [] ;
           hasPart = False ;
-          isAux = False
+          vtype = VReg
       } ;
 
       mkAux : Str -> Str -> Verb =
@@ -57,7 +59,7 @@ resource ResAfr = open Prelude in {
           } ;
           p = [] ;
           hasPart = False ;
-          isAux = True
+          vtype = VAux
       } ;
 
       mkVerbPart : Str -> Str -> Str -> Str -> Str -> Str -> Verb =
@@ -72,7 +74,7 @@ resource ResAfr = open Prelude in {
           } ;
           p = part ;
           hasPart = True ;
-          isAux = False
+          vtype = VReg
       } ;
 
       regVerb : Str -> Verb = \hou ->
@@ -81,12 +83,20 @@ resource ResAfr = open Prelude in {
            VInfa => hou ;
            VInfb => hou ;
            VPres => hou ;
-           VPast => "ge"+hou ;
-           VPerf => "ge"+hou
+           VPast => case hou of {
+             "e"+_ => "geë"+(drop 1 hou) ;
+             "i"+_ => "geï"+(drop 1 hou) ;
+             _ => "ge"+hou
+           } ;
+           VPerf => case hou of {
+             "e"+_ => "geë"+(drop 1 hou) ;
+             "i"+_ => "geï"+(drop 1 hou) ;
+             _ => "ge"+hou
+           }
          } ;
          p = [] ;
          hasPart = False ;
-         isAux = False
+         vtype = VReg
        } ;
 
        regVerbPart : Str -> Str -> Verb = \hou,op ->
@@ -95,12 +105,33 @@ resource ResAfr = open Prelude in {
             VInfa => op+hou ;
             VInfb => op+hou ;
             VPres => hou ;
-            VPast => op+"ge"+hou ;
-            VPerf => op+"ge"+hou
+            VPast => case hou of {
+              "e"+_ => op+"geë"+(drop 1 hou) ;
+              "i"+_ => op+"geï"+(drop 1 hou) ;
+              _ => op+"ge"+hou
+            } ;
+            VPerf => case hou of {
+              "e"+_ => op+"geë"+(drop 1 hou) ;
+              "i"+_ => op+"geï"+(drop 1 hou) ;
+              _ => op+"ge"+hou
+            }
           } ;
           p = op ;
           hasPart = True ;
-          isAux = False
+          vtype = VReg
+        } ;
+
+        be_V : Verb = {
+          s = table {
+            VInfa => "wees" ;
+            VInfb => "wees" ;
+            VPres => "is" ;
+            VPast => "was" ;
+            VPerf => "was"
+          } ;
+          p = [] ;
+          hasPart = False ;
+          vtype = VBe
         } ;
 
       -- mkVerb2 : Verb -> Str -> Verb = \v,c ->
@@ -193,7 +224,7 @@ resource ResAfr = open Prelude in {
           s : VForm => Str ;
           p : Str ; -- "op" van "ophou"
           hasPart : Bool ; -- is 'n deeltjiewerkwoord
-          isAux : Bool
+          vtype : VType
       } ;
 
     -- in building a clause, the final nie is always inserted for negative polarity, the initial nie depends on other factors
