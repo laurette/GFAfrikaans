@@ -57,19 +57,19 @@ abstract Grammar = {
   --   SlashPrep : Cl -> Prep -> ClSlash ; -- she walks with
 
     ComplV2 : V2 -> NP -> VP ;
-  --
     CompAP  : AP -> VP ;
---    CompAdv : Adv -> VP ;         -- be here
+    -- CompAdv : Adv -> VP ;         -- be here
     ComplVS : VS -> S  -> VP ;  -- know that she walks
-    --ComplVQ : VQ -> QS -> VP ;  -- wonder who walks
+    ComplVQ : VQ -> QS -> VP ;  -- wonder who walks
     ComplVV : VV -> VP -> VP ;  -- want to walk
     AdvVP : VP -> Adv -> VP ; -- walk in the city
+    UseV    : V -> VP ;
 
     DetCN   : Det -> CN -> NP ;
     ModCN   : AP -> CN -> CN ;
 
     UsePN : PN -> NP ;        -- John
-    --AdvNP : NP -> Adv -> NP ; -- the man in the city
+    AdvNP : NP -> Adv -> NP ; -- the man in the city
 
     PrepNP  : Prep -> NP -> Adv ; -- in the house
     AdAP    : AdA -> AP -> AP ;
@@ -78,7 +78,6 @@ abstract Grammar = {
     ConjAP  : Conj -> AP -> AP -> AP ;
     ConjNP  : Conj -> NP -> NP -> NP ;
 
-    UseV    : V -> VP ;
     UseN    : N -> CN ;
     UseA    : A -> AP ;
 
@@ -94,11 +93,11 @@ abstract Grammar = {
     very_AdA : AdA ;
 
     who_IP  : IP ;
-  --   here_Adv : Adv ;
+    here_Adv : Adv ;
     by_Prep, in_Prep, of_Prep, with_Prep, to_Prep : Prep ;
     can_VV, must_VV, want_VV : VV ;
-    --although_Subj : Subj ; --, because_Subj, when_Subj : Subj ;
-  --   when_IAdv, where_IAdv, why_IAdv : IAdv ;
+    although_Subj, because_Subj, when_Subj : Subj ;
+    when_IAdv, where_IAdv, why_IAdv : IAdv ;
 
      Pos, Neg : Pol ;
      Pres, Past, Fut, Perf : Tense ;
