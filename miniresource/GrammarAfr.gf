@@ -103,8 +103,8 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
           subcl = vp.subCl ;
           adv = vp.adv ;
           neg1 : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
-          neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos np.p vp.nword vp.finNie) ;
-                                       TNeg => putNie (fillNeg2Neg vp.finNie) } ;
+          neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos np.p vp.nword) ;
+                                       TNeg => pre { "nie" => [] ; _ => [] } ;
         in case f of {
           SVO => subj ++ verba ++ verbhet ++ obja ++ neg1!p ++ adv ++ objb ++ verbb ++ verbc ++ subcl ++ neg2!p ;
           SOV => subj ++ obja ++ neg1!p ++ adv ++ objb ++ verba ++ verbb ++ verbhet ++ verbc ++ subcl ++ neg2!p ;
@@ -150,7 +150,7 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     --       adv = vp.adv ;
     --       neg1a : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
     --       neg1b : TPol => Str = table { TPos => [] ; TNeg => "nie" } ;
-    --       neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos TPos vp.nword vp.finNie) ;
+    --       neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos TPos vp.nword) ;
     --                                    TNeg => putNie (fillNeg2Neg vp.finNie) } ;
     --     in
     --       subj ++ verba ++ obja ++ neg1a!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;

@@ -270,13 +270,13 @@ resource ResAfr = open Prelude,Predef in {
       } ;
 
       -- receives np.p of the subject and vp.nword
-      fillNeg2Pos : TPol -> Bool -> Bool -> Bool = \p,nword,finNie ->
-        case finNie of {
-          True => False ;
-          False => case p of {
+      fillNeg2Pos : TPol -> Bool -> Bool -> Bool = \p,nword ->
+      pre {
+          "nie" => False ;
+          _ => case p of {
                     TPos => nword ;
                     TNeg => True
-                  }
+          }
       } ;
 
       finNiePos : TPol -> Bool -> Bool -> Bool = \p,nword,finNie ->
@@ -289,9 +289,9 @@ resource ResAfr = open Prelude,Predef in {
       } ;
 
       fillNeg2Neg : Bool -> Bool = \finNie ->
-        case finNie of {
-          True => False ;
-          False => True
+      pre {
+          "nie" => False ;
+          _ => True
       } ;
 
       putNie : Bool -> Str = \b ->
