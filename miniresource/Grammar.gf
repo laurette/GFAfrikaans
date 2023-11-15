@@ -30,6 +30,7 @@ abstract Grammar = {
 
     Adv ;   -- adverb                           e.g. "here"
     AdA ;   -- ad-adjective                     e.g. "very"
+    IAdv ;
 
     Prep ;    -- preposition (and/or case)        e.g. "with"
     IP ;    -- interrogative pronoun            e.g. "who"
@@ -49,9 +50,9 @@ abstract Grammar = {
     -- SubjCl : Cl -> Subj -> S -> Cl ;     -- she walks because we run
 
     QuestCl    : Cl -> QCl ;             -- does she walk
-    --QuestVP    : IP -> VP -> QCl ;       -- who walks
+    QuestVP    : IP -> VP -> QCl ;       -- who walks
   --   QuestSlash : IP -> ClSlash -> QCl ;  -- who does she walk with
-  --   QuestIAdv  : IAdv -> Cl -> QCl ;     -- why does she walk
+    QuestIAdv  : IAdv -> Cl -> QCl ;     -- why does she walk
 
   --   SlashV2   : NP -> V2 -> ClSlash ;   -- she loves
   --   SlashPrep : Cl -> Prep -> ClSlash ; -- she walks with

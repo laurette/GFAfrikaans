@@ -9,7 +9,7 @@ resource ResAfr = open Prelude,Predef in {
     Person = Per1 | Per2 | Per3 ;
     Gender = Masc | Fem | Neuter ;
 
-    VType = VReg | VAux | VBe ;
+    VType = VReg | VAux | VBe ; -- | VBeAux ;
 
     AForm = APredic | AAttrib | AGen ;
 
@@ -84,11 +84,13 @@ resource ResAfr = open Prelude,Predef in {
            VInfb => hou ;
            VPres => hou ;
            VPast => case hou of {
+             "ver"+_ => hou ;
              "e"+_ => "geë"+(drop 1 hou) ;
              "i"+_ => "geï"+(drop 1 hou) ;
              _ => "ge"+hou
            } ;
            VPerf => case hou of {
+             "ver"+_ => hou ; 
              "e"+_ => "geë"+(drop 1 hou) ;
              "i"+_ => "geï"+(drop 1 hou) ;
              _ => "ge"+hou
@@ -237,9 +239,10 @@ resource ResAfr = open Prelude,Predef in {
           --nPerson : Bool ; -- true: V2 direct obj is person, V3 indir object is person
           adv : Str ; -- vinnig
           --adV : Str ; -- altyd/nooit
+          vIsBe : Bool ;
           filled : Bool ; -- insert first "nie" if sentence polarity is negative, because certain slots are filled (hy loop nie/hy loop *nie* goed nie)
           nword : Bool ; -- the vp contains the equivalent of an nword, which forces the second "nie"
-          finNie : Bool ; -- final "nie" present irrespective of clause polarity; overrides any need for a final "nie"
+          -- finNie : Bool ; -- final "nie" present irrespective of clause polarity; overrides any need for a final "nie"
           --double2 : Bool ;  -- always insert second "nie", because of n-word (niemand *nie*), unless a final "nie" is already present...
           --objNeg : Bool ;   -- a final "nie" is present in an object NP
           --inf : Str * Bool ;
@@ -270,13 +273,11 @@ resource ResAfr = open Prelude,Predef in {
       } ;
 
       -- receives np.p of the subject and vp.nword
-      fillNeg2Pos : TPol -> Bool -> Bool -> Bool = \p,nword ->
-      pre {
-          "nie" => False ;
-          _ => case p of {
-                    TPos => nword ;
-                    TNeg => True
-          }
+      fillNeg2Pos : TPol -> Bool -> Bool = \p,nword ->
+      case <p,nword> of {
+        <TPos,True> => True ;
+        <TPos,False> => False ;
+        <TNeg,_> => True
       } ;
 
       finNiePos : TPol -> Bool -> Bool -> Bool = \p,nword,finNie ->
@@ -288,15 +289,9 @@ resource ResAfr = open Prelude,Predef in {
                   }
       } ;
 
-      fillNeg2Neg : Bool -> Bool = \finNie ->
-      pre {
-          "nie" => False ;
-          _ => True
-      } ;
-
       putNie : Bool -> Str = \b ->
         case b of {
-          True => "nie" ;
+          True => pre { "nie" => [] ; _ => "nie" } ;
           False => []
         } ;
 }

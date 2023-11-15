@@ -1,16 +1,15 @@
 concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
   lincat
-    Utt = Str ;
+    Utt = { s : Str } ;
     -- ClSlash ; -- clause missing noun phrase       e.g. "she walks with"
     -- Subj ;    -- subjunction                      e.g. "because"
-    -- IAdv ;    -- interrogative adverb             e.g. "why"
 
-    S  = { s : Order => Str ; finNie : Bool } ;
-    QS = { s : Order => Str ; finNie : Bool } ;
-    QCl = { s : TTense => TPol => Order => Str ; finNie : Bool } ;
+    S  = { s : Order => Str } ; -- ; finNie : Bool } ;
+    QS = { s : Order => Str ; o : Order ; qw : Str ; hasQw : Bool } ; -- ; finNie : Bool } ;
+    QCl = { s : TTense => TPol => Order => Str ; o : Order ; qw : Str ; hasQw : Bool } ; -- ; finNie : Bool } ;
 
-    Cl = { s : TTense => TPol => Order => Str ; finNie : Bool } ;
+    Cl = { s : TTense => TPol => Order => Str } ; -- ; finNie : Bool } ;
 
     VP = ResAfr.VP ;
 
@@ -31,6 +30,7 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
     Adv = { s : Str ; p : TPol } ; -- polarity: altyd/nooit
     AdA = { s : Str} ;
+    IAdv = { s : Str } ;
 
     IP = { s : Str } ;
     Prep = { s : Str } ;
@@ -40,17 +40,18 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     Conj = { s : Str } ;
 
   lin
-    UttS s = s.s ! SVO ;
-    UttQS q = q.s ! VSO ;
+    UttS s = { s = s.s ! SVO } ;
+    UttQS q = { s = q.qw ++ q.s ! q.o } ;
 
     UseCl t p cl = {
       s = \\o => t.s ++ p.s ++ cl.s!t.t!p.p!o ;
-      finNie = cl.finNie
     } ;
 
     UseQCl t p cl = {
       s = \\o => t.s ++ p.s ++ cl.s!t.t!p.p!o ;
-      finNie = cl.finNie
+      o = cl.o ;
+      qw = cl.qw ;
+      hasQw = cl.hasQw
     } ;
 
     PredVP np vp = {
@@ -73,24 +74,28 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
             <VReg,TPerf> => "het" ;
             <_,_> => []
           } ;
-          verbb = case <(vp.v).vtype,t> of {
-            <VAux,TPres> => vp.compV!VInfa ; -- (kan) sien
-            <VAux,TPast> => vp.compV!VInfa ; -- (kon) sien
-            <VAux,TPerf> => vp.compV!VInfb ; -- (kon) gesien
+          verbb = case <(vp.v).vtype,t,vp.vIsBe> of {
+            <VAux,TPres,_> => vp.compV!VInfa ; -- (kan) sien
+            <VAux,TPast,True> => [] ; -- () gewees het
+            <VAux,TPast,False> => vp.compV!VPast ; -- (kon) sien
+            <VAux,TPerf,_> => vp.compV!VInfa ; -- (kon) gesien
             <VAux,TFut> => (vp.v).s!VInfa ; -- (sal) kan
 
-            <VReg,TPres> => (vp.v).p ; -- (kyk) op
-            <VReg,TPast> => (vp.v).s!VPast ; -- (het) gesien
-            <VReg,TPerf> => (vp.v).s!VPerf ; -- (het) gesien
-            <VReg,TFut> => (vp.v).s!VInfa ;-- (sal) sien
+            <VReg,TPres,_> => (vp.v).p ; -- (kyk) op
+            <VReg,TPast,_> => (vp.v).s!VPast ; -- (het) gesien
+            <VReg,TPerf,_> => (vp.v).s!VPerf ; -- (het) gesien
+            <VReg,TFut,_> => (vp.v).s!VInfa ;-- (sal) sien
 
-            <_,_> => []
+            <_,_,_> => []
           } ;
-          verbc = case <(vp.v).vtype,t> of {
-            <VBe,TPast> => "gewees" ; -- (was) gewees
-            <VAux,TPast> => "het" ; -- (kon gesien) het
-            <VAux,TFut> => vp.compV!VInfa ; -- (sal kan) sien
-            <_,_> => []
+          verbc = case <(vp.v).vtype,t,vp.vIsBe> of {
+            <VBe,TPast,_> => "gewees" ; -- (was) gewees
+            <VBe,TFut,_> => "wees" ; -- (sal) wees
+            <VAux,TPast,True> => "gewees het" ; -- (kon gesien) het
+            <VAux,TPast,False> => "het" ; -- (kon gesien) het
+            <VAux,TFut,_> => vp.compV!VInfa ; -- (sal kan) sien
+
+            <_,_,_> => []
           } ;
           obja = case vp.v.vtype of {
             VBe => [] ;
@@ -102,60 +107,96 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
           } ;
           subcl = vp.subCl ;
           adv = vp.adv ;
-          neg1 : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
-          neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos np.p vp.nword) ;
-                                       TNeg => pre { "nie" => [] ; _ => [] } ;
+          neg1 : TPol => Str = table {
+            TPos => [] ;
+            TNeg => putNie (fillNeg1 t vp.filled)
+          } ;
+          neg2 : TPol => Str = table {
+            TPos => putNie (fillNeg2Pos np.p vp.nword) ;
+            TNeg => pre { "nie" => [] ; _ => "nie" }
+          } ;
         in case f of {
           SVO => subj ++ verba ++ verbhet ++ obja ++ neg1!p ++ adv ++ objb ++ verbb ++ verbc ++ subcl ++ neg2!p ;
           SOV => subj ++ obja ++ neg1!p ++ adv ++ objb ++ verba ++ verbb ++ verbhet ++ verbc ++ subcl ++ neg2!p ;
           VSO => verba ++ verbhet ++ subj ++ obja ++ neg1!p ++ adv ++ objb ++ subcl ++ verbb ++ verbc ++ neg2!p
         } ;
-      finNie = finNiePos np.p vp.nword vp.finNie
     } ;
 
-    -- SubjCl cl subj s = {
-    --   s = \\t,p,f => cl.s!t!p!f ++ subj.s ++ s.s!subj.o ;
-    --   finNie = \\p => s.finNie
-    -- } ;
+    QuestCl cl = cl ** { o = VSO ; qw = [] ; hasQw = False } ;
 
-    QuestCl cl = cl ;
+    QuestIAdv iadv cl = cl ** { o = VSO ; qw = iadv.s ; hasQw = True } ;
 
-    -- QuestVP ip vp = {
-    --   s = \\t,p =>
-    --     let
-    --       subj = ip.s ;
-    --       verba = case <t,vp.v.isAux> of {
-    --         <TPres,_> => (vp.v).s!VPres ; -- hou / sien / kan
-    --         <TPast,True> => (vp.v).s!VPast ; -- kon
-    --         <TPast,False> => "het" ;
-    --         <TPerf,True> => (vp.v).s!VPast ; -- kon
-    --         <TPerf,False> => "het" ;
-    --         <TFut,_> => "sal"
-    --       } ;
-    --       verbb = case <t,vp.v.isAux> of {
-    --         <TPres,True> => vp.compV ! VInfa ; -- (wil) ophou / sien
-    --         <TPast,True> => vp.compV ! VInfb ;  -- (wou) ophou / sien
-    --         <TPerf,True> => vp.compV ! VPerf ++ "het" ; -- opgehou het / gesien het
-    --         <TFut,True> => (vp.v).s ! VPres ++ vp.compV ! VInfa ; -- kan ophou / kan sien
-    --
-    --         <TPres,False> => (vp.v).p ; -- op / []
-    --         <TPast,False> => (vp.v).s!VPast ; -- opgehou / gesien
-    --         <TPerf,False> => (vp.v).s!VPerf ; -- opgehou / gesien
-    --         <TFut,False> => (vp.v).s!VInfa -- ophou / sien
-    --       } ;
-    --       --verbc =
-    --       obja = vp.n2a ;
-    --       objb = vp.n2b ;
-    --       subcl = vp.subCl ;
-    --       adv = vp.adv ;
-    --       neg1a : TPol => Str = table { TPos => [] ; TNeg => putNie (fillNeg1 t vp.filled)} ;--table { Pos => [] ; Neg => case vp.double1 of {True => "nie" ; False => []}} ;
-    --       neg1b : TPol => Str = table { TPos => [] ; TNeg => "nie" } ;
-    --       neg2 : TPol => Str = table { TPos => putNie (fillNeg2Pos TPos vp.nword) ;
-    --                                    TNeg => putNie (fillNeg2Neg vp.finNie) } ;
-    --     in
-    --       subj ++ verba ++ obja ++ neg1a!p ++ adv ++ objb ++ verbb ++ subcl ++ neg2!p ;
-    --   finNie = finNiePos TPos vp.nword vp.finNie
-    -- } ;
+    QuestVP ip vp = {
+      s = \\t,p,f =>
+        let
+          subj = [] ;
+          verba = case <(vp.v).vtype,t> of {
+            <VAux,TPres> => (vp.v).s!VPres ; -- kan
+            <VAux,TPast> => (vp.v).s!VPast ; -- kon
+            <VAux,TPerf> => (vp.v).s!VPast ; -- kon
+            <_,TPres> => (vp.v).s!VPres ; -- sien
+            <VBe,TPast> => (vp.v).s!VPast ;
+            <VBe,TPerf> => (vp.v).s!VPres ;
+            <VReg,TPast> => [] ;
+            <VReg,TPerf> => [] ;
+            <_,TFut> => "sal"
+          } ;
+          verbhet = case <(vp.v).vtype,t> of {
+            <VReg,TPast> => "het" ;
+            <VReg,TPerf> => "het" ;
+            <_,_> => []
+          } ;
+          verbb = case <(vp.v).vtype,t,vp.vIsBe> of {
+            <VAux,TPres,_> => vp.compV!VInfa ; -- (kan) sien
+            <VAux,TPast,True> => [] ; -- () gewees het
+            <VAux,TPast,False> => vp.compV!VPast ; -- (kon) sien
+            <VAux,TPerf,_> => vp.compV!VInfa ; -- (kon) gesien
+            <VAux,TFut> => (vp.v).s!VInfa ; -- (sal) kan
+
+            <VReg,TPres,_> => (vp.v).p ; -- (kyk) op
+            <VReg,TPast,_> => (vp.v).s!VPast ; -- (het) gesien
+            <VReg,TPerf,_> => (vp.v).s!VPerf ; -- (het) gesien
+            <VReg,TFut,_> => (vp.v).s!VInfa ;-- (sal) sien
+
+            <_,_,_> => []
+          } ;
+          verbc = case <(vp.v).vtype,t,vp.vIsBe> of {
+            <VBe,TPast,_> => "gewees" ; -- (was) gewees
+            <VBe,TFut,_> => "wees" ; -- (sal) wees
+            <VAux,TPast,True> => "gewees het" ; -- (kon gesien) het
+            <VAux,TPast,False> => "het" ; -- (kon gesien) het
+            <VAux,TFut,True> => "wees" ; -- (sal kan) sien
+            <VAux,TFut,False> => vp.compV!VInfa ; -- (sal kan) sien
+
+            <_,_,_> => []
+          } ;
+          obja = case vp.v.vtype of {
+            VBe => [] ;
+            _ => vp.n2a
+          } ;
+          objb = case vp.v.vtype of {
+            VBe => vp.n2a ;
+            _ => vp.n2b
+          } ;
+          subcl = vp.subCl ;
+          adv = vp.adv ;
+          neg1 : TPol => Str = table {
+            TPos => [] ;
+            TNeg => putNie (fillNeg1 t vp.filled)
+          } ;
+          neg2 : TPol => Str = table {
+            TPos => putNie (fillNeg2Pos TPos vp.nword) ;
+            TNeg => pre { "nie" => [] ; _ => "nie" }
+          } ;
+        in case f of {
+          SVO => subj ++ verba ++ verbhet ++ obja ++ neg1!p ++ adv ++ objb ++ verbb ++ verbc ++ subcl ++ neg2!p ;
+          SOV => subj ++ obja ++ neg1!p ++ adv ++ objb ++ verba ++ verbb ++ verbhet ++ verbc ++ subcl ++ neg2!p ;
+          VSO => verba ++ verbhet ++ subj ++ obja ++ neg1!p ++ adv ++ objb ++ subcl ++ verbb ++ verbc ++ neg2!p
+        } ;
+        o = SVO ;
+        qw = ip.s ;
+        hasQw = True
+    } ;
 
     -- QuestSlash : IP -> ClSlash -> QCl ;  -- who does she walk with
     -- QuestIAdv  : IAdv -> Cl -> QCl ;     -- why does she walk
@@ -180,20 +221,26 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       filled = case <np.isPron,v2.hasC> of {
         <True,False> => False ;
         <_,_> => True
-      } ; -- ***2018-10-03
-      -- filled = case np.isPron of {
-      --   True => False ;
-      --   False => True
-      -- } ;
+      } ;
       nword = case np.p of {
         TPos => False ;
         TNeg => True
       } ;
-      finNie = False ;
       compV = \\_ => []
     } ;
 
-    -- CompAP  : AP -> VP ;
+    CompAP ap = {
+      v = be_V ; -- weet
+      inf = <[],[]> ;
+      vIsBe = True ;
+      n2a = ap.s!APredic ;
+      n2b = [] ;
+      subCl = [] ; -- dat <S>
+      adv = [] ;
+      filled = True ;
+      nword = False ;
+      compV = \\_ => []
+    } ;
 
     ComplVS vs s = {
       v = vs.v ; -- weet
@@ -205,7 +252,6 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       adv = [] ;
       filled = True ;
       nword = False ;
-      finNie = s.finNie ;
       compV = \\_ => []
     } ;
 
@@ -215,25 +261,26 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       vIsBe = False ;
       n2a = [] ;
       n2b = [] ;
-      subCl = vq.c ++ qs.s ! SOV ; -- dat <S>
+      subCl = case qs.hasQw of {
+        False => vq.c ++ qs.s ! SOV ; -- dat <S>
+        True => qs.qw ++ qs.s ! qs.o
+      } ;
       adv = [] ;
       filled = True ;
       nword = False ;
-      finNie = qs.finNie ;
       compV = \\_ => []
     } ;
 
     ComplVV vv vp = {
       v = vv ;
       inf = <(vp.v).s!VInfa,(vp.v).s!VPerf> ;
-      vIsBe = False ;
+      vIsBe = vp.vIsBe ;
       n2a = vp.n2a ;
       n2b = vp.n2b ;
       subCl = vp.subCl ;
       adv = vp.adv ;
       filled = True ;
       nword = vp.nword ;
-      finNie = vp.finNie ;
       compV = addCompV vp.v vp.compV
     } ;
 
@@ -250,19 +297,18 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
         TPos => vp.nword ;
         TNeg => True
       } ;
-      finNie = vp.finNie ;
       compV = vp.compV
     } ;
 
     UseV v = {
       v = v ;
+      vIsBe = False ;
       n2a = [] ;
       n2b = [] ;
       subCl = [] ;
       adv = [] ;
       filled = v.hasPart ; -- True => "hy hou [nie] *op* nie" ; False => "hy loop [] nie"
       nword = False ;
-      finNie = False ;
       compV = \\_ => []
     } ;
 
@@ -303,7 +349,6 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
     ConjS conj s1 s2 = {
       s = \\o => s1.s!o ++ conj.s ++ s2.s!o ;
-      finNie = s2.finNie
     } ;
 
     ConjAP conj ap1 ap2 = {
@@ -372,7 +417,8 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
     although_Subj = { s = "alhoewel" ; o = SOV } ;
     -- because_Subj, when_Subj : Subj ;
-    -- when_IAdv, where_IAdv, why_IAdv : IAdv ;
+    when_IAdv = { s = "wanneer" } ;
+    -- where_IAdv, why_IAdv : IAdv ;
 
     Pos  = {s = [] ; p = TPos} ;
     Neg  = {s = [] ; p = TNeg} ;
