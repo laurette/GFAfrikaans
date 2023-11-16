@@ -1,4 +1,4 @@
-concrete LexiconAfr of Lexicon = GrammarAfr ** open ResAfr,ParadigmsAfr,Prelude in {
+concrete MiniLexiconAfr of MiniLexicon = MiniGrammarAfr ** open MiniResAfr,MiniParadigmsAfr,Prelude in {
 
 lin
   man_N = mkN "man" "mans" Masc ;

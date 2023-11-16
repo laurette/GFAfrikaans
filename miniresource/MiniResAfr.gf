@@ -1,4 +1,4 @@
-resource ResAfr = open Prelude,Predef in {
+resource MiniResAfr = open Prelude,Predef in {
 
   param
     Number = Sg | Pl ;
@@ -26,6 +26,13 @@ resource ResAfr = open Prelude,Predef in {
     oper
 
     -- worst case opers
+
+      compRegNoun : Str -> Str -> {s : Number => Str} = \n1,n2 -> let 
+        noun2 = regNoun n2 
+      in {
+        s = \\num => n1 ++BIND++ noun2.s!num
+      } ;
+
       mkNoun : Str -> Str -> {s : Number => Str} =
       \ev,mv -> {s = table {Sg => ev ; Pl => mv} } ;
 

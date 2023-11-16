@@ -1,4 +1,4 @@
-resource ParadigmsAfr = open ResAfr, GrammarAfr, Prelude in {
+resource MiniParadigmsAfr = open MiniResAfr, MiniGrammarAfr, Prelude in {
 
 oper
   mkN = overload {
@@ -6,11 +6,12 @@ oper
     mkN : (gat,gate : Str) -> N = \ns,np -> lin N (mkNoun ns np) ** {g = Neuter} ; -- "thing" nouns
     mkN : (meisie : Str) -> Gender -> N  = \n,gd -> lin N (regNoun n) ** {g = gd} ;   -- "gendered" nouns (die meisie verbeel haar)
     mkN : (vrou,vrouens : Str) -> Gender -> N = \ns,np,gd -> lin N (mkNoun ns np) ** {g = gd} ; -- "gendered" nouns"
+    mkN : N -> N -> N = CompoundN ;
   } ;
 
-  -- mkPN : overload {
-  --   mkPN : Str -> PN ; -- proper name
-  --   } ;
+  mkPN = overload {
+    mkPN : Str -> PN = \name -> lin PN ({ s = name ; a = Ag Sg Per3 Masc }); -- proper name
+  } ;
 
   mkA = overload {
     mkA : (vars : Str) -> A = \a -> lin A (regAdj a) ; -- regular adjective
@@ -31,6 +32,10 @@ oper
     mkV2 : V -> Str -> V2 = \kyk,na -> lin V2 { v = kyk ; c = na ; hasC = True } ;
   } ;
 
+  mkVV = overload {
+    mkVV : V -> VV = \v -> lin VV (v) ;
+  } ;
+
   mkVS = overload {
     mkVS : V -> VS = \weet -> lin VS { v = weet ; c = "dat" } ;
   } ;
@@ -48,6 +53,14 @@ oper
   mkAdv = overload {
     mkAdv : Str -> Adv = \adv -> lin Adv (regAdv adv TPos) ;
     mkAdv : Str -> TPol -> Adv = \adv,p -> lin Adv (regAdv adv p) ;
+  } ;
+
+  mkPrep = overload {
+    mkPrep : Str -> Prep = \s -> lin Prep (ss s) ;
+  } ;
+
+  mkDet = overload {
+    mkDet : Str -> Det = \det -> lin Det ({s = det ; n = Sg ; p = TPos }) ;
   } ;
 
 }

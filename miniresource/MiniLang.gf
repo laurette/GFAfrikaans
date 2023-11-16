@@ -1,0 +1,1 @@
+abstract MiniLang = MiniGrammar, MiniLexicon ;

@@ -1,43 +1,4 @@
-concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
-
-  lincat
-    Utt = { s : Str } ;
-    -- ClSlash ; -- clause missing noun phrase       e.g. "she walks with"
-    -- Subj ;    -- subjunction                      e.g. "because"
-
-    S  = { s : Order => Str } ; -- ; finNie : Bool } ;
-    QS = { s : Order => Str ; o : Order ; qw : Str ; hasQw : Bool } ; -- ; finNie : Bool } ;
-    QCl = { s : TTense => TPol => Order => Str ; o : Order ; qw : Str ; hasQw : Bool } ; -- ; finNie : Bool } ;
-
-    Cl = { s : TTense => TPol => Order => Str } ; -- ; finNie : Bool } ;
-
-    VP = ResAfr.VP ;
-
-    NP = { s : Case => Str ; a : Agr ; isPron : Bool ; p : TPol } ; -- gender and number in order to make reflexive verbs work (die vrou verbeel haar, die kinders verbeel hulle)
-    AP = { s : AForm => Str } ;
-
-    PN = { s : Str ; a : Agr } ;
-    CN = { s : Number => Str ; g : Gender } ;
-    Det = {s : Str ; n : Number ; p : TPol } ;
-    N = { s : Number => Str ; g : Gender } ;
-    A = { s : AForm => Str } ;
-
-    V = Verb ;
-    V2 = { v : Verb ; c : Str ; hasC : Bool } ; -- c is die "na" van "kyk na"
-    VS = { v : Verb ; c : Str } ; -- c is die "dat" van "weet dat"
-    VV = Verb ;
-    VQ = { v : Verb ; c : Str } ; -- c is die "of" van "wonder of"
-
-    Adv = { s : Str ; p : TPol } ; -- polarity: altyd/nooit
-    AdA = { s : Str} ;
-    IAdv = { s : Str } ;
-
-    IP = { s : Str } ;
-    Prep = { s : Str } ;
-
-    Pol = { s : Str ; p : TPol} ;
-    Tense = { s : Str ; t : TTense} ;
-    Conj = { s : Str } ;
+concrete MiniGrammarAfr of MiniGrammar = MiniCatAfr ** open Prelude, MiniResAfr in {
 
   lin
     UttS s = { s = s.s ! SVO } ;
@@ -52,6 +13,10 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       o = cl.o ;
       qw = cl.qw ;
       hasQw = cl.hasQw
+    } ;
+
+    AdvS adv s = {
+      s = \\o => adv.s ++ s.s!VSO
     } ;
 
     PredVP np vp = {
@@ -242,6 +207,19 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
       compV = \\_ => []
     } ;
 
+    CompAdv adv = {
+      v = be_V ; -- weet
+      inf = <[],[]> ;
+      vIsBe = True ;
+      n2a = adv.s ;
+      n2b = [] ;
+      subCl = [] ; -- dat <S>
+      adv = [] ;
+      filled = True ;
+      nword = False ;
+      compV = \\_ => []
+    } ;
+
     ComplVS vs s = {
       v = vs.v ; -- weet
       inf = <[],[]> ;
@@ -375,9 +353,15 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
 
     UseN n = n ;
 
+    CompoundN n1 n2 = {
+        s = \\num => n1.s!Sg ++BIND++ n2.s!num ;
+        g = n2.g
+      } ;
+
     UseA adj = adj ;
 
     a_Det = { s = "'n" ; n = Sg ; p = TPos } ;
+    aPl_Det = { s = "" ; n = Pl ; p = TPos } ;
     theSg_Det = { s = "die" ; n = Sg ; p = TPos } ;
     thePl_Det = { s = "die" ; n = Pl ; p = TPos } ;
     every_Det = { s = "elke" ; n = Sg ; p = TPos } ;
@@ -397,13 +381,14 @@ concrete GrammarAfr of Grammar = open Prelude, ResAfr in {
     we_NP = pronNP "ons" "ons" Sg Per1 Neuter TPos ;
     youPl_NP = pronNP "julle" "julle" Sg Per2 Neuter TPos ;
     they_NP = pronNP "hulle" "hulle" Sg Per3 Neuter TPos ;
+    it_NP = pronNP "dit" "dit" Sg Per3 Masc TPos ;
 
     no_one_NP = pronNP "niemand" "niemand" Sg Per3 Neuter TNeg ;
     nothing_NP = pronNP "niks" "niks" Sg Per3 Neuter TNeg ;
     very_AdA = ss "baie" ;
 
     who_IP = { s = "wie" } ;
-    -- here_Adv : Adv ;
+    here_Adv = { s = "hier" ; p = TPos } ;
 
     by_Prep = {s = "deur"}  ;
     in_Prep = {s = "in"}  ;

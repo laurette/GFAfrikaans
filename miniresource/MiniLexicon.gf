@@ -1,4 +1,4 @@
-abstract Lexicon = Grammar [N,V] ** {
+abstract MiniLexicon = MiniGrammar [N,V] ** {
 
 fun
   man_N, woman_N, house_N, tree_N : N ;
